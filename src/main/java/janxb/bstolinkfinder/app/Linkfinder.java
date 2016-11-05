@@ -5,6 +5,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Linkfinder {
     private String seriesName;
     private int seriesNumber;
@@ -18,8 +21,15 @@ public class Linkfinder {
     }
 
     public String[] getDownloadLinks() {
+        List<String> results = new ArrayList<>();
+
         String url = BASEURL + "serie/" + seriesName + "/" + seriesNumber + "";
         Document startPage = Browser.downloadWebsite(url);
+
+        Element errorBox = startPage.select("div.error").first();
+        if (errorBox != null){
+            return results.toArray(new String[0]);
+        }
 
         String hosterIdentifier = hoster.getIdentifier();
         Elements links = startPage.select("table").first().select("tbody tr a." + hosterIdentifier);
@@ -29,11 +39,11 @@ public class Linkfinder {
             Document episodePage = Browser.downloadWebsite(episodeUrl);
             String downloadLink = hoster.getDownloadLinkFromDocument(episodePage);
 
-            System.out.println(downloadLink);
+            results.add(downloadLink);
 
         }
 
-        return null;
+        return results.toArray(new String[0]);
     }
 
 

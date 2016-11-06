@@ -20,15 +20,21 @@ public class Linkfinder {
         this.hoster = hoster;
     }
 
-    public String[] getDownloadLinks() {
+    public LinkfinderResponse getDownloadLinks() {
         List<String> results = new ArrayList<>();
+        int episodesNotFoundCounter = 0;
 
         String url = BASEURL + "serie/" + seriesName + "/" + seriesNumber + "";
         Document startPage = Browser.downloadWebsite(url);
 
         Element errorBox = startPage.select("div.error").first();
-        if (errorBox != null){
-            return results.toArray(new String[0]);
+        if (errorBox != null) {
+            return new LinkfinderResponse(
+                    this.seriesName,
+                    this.seriesNumber,
+                    Integer.MAX_VALUE,
+                    new String[0]
+            );
         }
 
         String hosterIdentifier = hoster.getIdentifier();
@@ -37,13 +43,22 @@ public class Linkfinder {
             String episodeUrl = BASEURL + link.attr("href");
 
             Document episodePage = Browser.downloadWebsite(episodeUrl);
-            String downloadLink = hoster.getDownloadLinkFromDocument(episodePage);
+            try {
+                String downloadLink = hoster.getDownloadLinkFromDocument(episodePage);
+                results.add(downloadLink);
+            } catch (DownloadNotExistingException e) {
+                episodesNotFoundCounter++;
+            }
 
-            results.add(downloadLink);
 
         }
 
-        return results.toArray(new String[0]);
+        return new LinkfinderResponse(
+                this.seriesName,
+                this.seriesNumber,
+                episodesNotFoundCounter,
+                results.toArray(new String[0])
+        );
     }
 
 
